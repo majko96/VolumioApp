@@ -12,7 +12,6 @@
 #include <QtCore/QVariant>
 #include <QtWidgets/QAction>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>
 #include <QtWidgets/QMenuBar>
@@ -34,8 +33,6 @@ public:
     QPushButton *pushButton_minus;
     QPushButton *pushButton_plus;
     QPushButton *pushButton;
-    QLineEdit *lineEdit;
-    QPushButton *pushButton_ip;
     QMenuBar *menubar;
     QMenu *menuSettings;
     QStatusBar *statusbar;
@@ -44,7 +41,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(370, 203);
+        MainWindow->resize(370, 152);
         actionIP_adress = new QAction(MainWindow);
         actionIP_adress->setObjectName(QString::fromUtf8("actionIP_adress"));
         actionExit = new QAction(MainWindow);
@@ -71,12 +68,6 @@ public:
         pushButton = new QPushButton(centralwidget);
         pushButton->setObjectName(QString::fromUtf8("pushButton"));
         pushButton->setGeometry(QRect(20, 60, 94, 36));
-        lineEdit = new QLineEdit(centralwidget);
-        lineEdit->setObjectName(QString::fromUtf8("lineEdit"));
-        lineEdit->setGeometry(QRect(20, 100, 221, 34));
-        pushButton_ip = new QPushButton(centralwidget);
-        pushButton_ip->setObjectName(QString::fromUtf8("pushButton_ip"));
-        pushButton_ip->setGeometry(QRect(260, 100, 94, 36));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
@@ -114,7 +105,6 @@ public:
         pushButton_minus->setText(QCoreApplication::translate("MainWindow", "-", nullptr));
         pushButton_plus->setText(QCoreApplication::translate("MainWindow", "+", nullptr));
         pushButton->setText(QCoreApplication::translate("MainWindow", "Mute", nullptr));
-        pushButton_ip->setText(QCoreApplication::translate("MainWindow", "Set IP", nullptr));
         menuSettings->setTitle(QCoreApplication::translate("MainWindow", "Settings", nullptr));
     } // retranslateUi
 
