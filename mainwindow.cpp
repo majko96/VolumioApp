@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QInputDialog>
 #include <QMessageBox>
+
 /*
 #include <QNetworkReply>
 #include <unistd.h>
@@ -12,10 +13,17 @@
 #include <QFile>
 */
 
+#include <pwd.h>
+#include <unistd.h>
+
+
+
 using namespace std;
 std::string ip_address,label;
 std::string url1 ="http://", url_state= "/api/v1/getState";
 QString qIP_address;
+
+
 
 /*
 void MainWindow::loop()
@@ -51,7 +59,13 @@ for(;;)
 
 void readip()
 {
-    QFile file("/tmp/volumio_ip/data.txt");
+    struct passwd *pw = getpwuid(getuid());
+    const char *homedir = pw->pw_dir;
+    std::string h = std::string(homedir);
+    std::string path_read = h + "/.volumiox/data.txt";
+
+
+    QFile file(path_read.c_str());
     file.open(QIODevice::ReadOnly);
     if (!file.isOpen())
         return;
@@ -194,10 +208,18 @@ void MainWindow::on_actionIP_adress_triggered()
         std::string input1=input.toStdString();
         ip_address = input1;
 
-        QDir dir("/tmp/volumio_ip");
+
+        struct passwd *pw = getpwuid(getuid());
+        const char *homedir = pw->pw_dir;
+        std::string h = std::string(homedir);
+            std::string path = h + "/.volumiox/";
+            std::string data = path + "data.txt";
+
+        QDir dir(path.c_str());
         if (!dir.exists())
              dir.mkpath(".");
-        QString filename = "/tmp/volumio_ip/data.txt";//file adding path
+
+        QString filename = data.c_str();
         QFile file(filename);
         file.open(QFile::WriteOnly|QFile::Truncate);
         QTextStream stream(&file);
