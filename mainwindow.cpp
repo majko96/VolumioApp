@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowTitle("VolumioX");
 
 
-        QColor darkGray(53, 53, 53);
+        QColor darkGray(57, 62, 70);
         QColor gray(128, 128, 128);
         QColor black(25, 25, 25);
         QColor blue(42, 130, 218);
