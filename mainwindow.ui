@@ -323,7 +323,7 @@ border-radius:5px;*/</string>
   </widget>
   <action name="actionIP_adress">
    <property name="text">
-    <string>IP adress</string>
+    <string>IP address</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
