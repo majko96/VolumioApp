@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QTimer>
-#include <QPropertyAnimation>
+#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -47,11 +47,11 @@ private slots:
 
     void on_actionGitHub_triggered();
 
+
 private:
     Ui::MainWindow *ui;
     QTimer *timer;
     QTimer *timer2;
-    QPropertyAnimation *mMoveAnimation;
 
 };
 

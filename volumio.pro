@@ -43,5 +43,5 @@ RESOURCES += \
     resource.qrc
 
 
-
+INCLUDEPATH += /home/mario/Documents/QtDark
 

@@ -8,7 +8,7 @@ ScrollText::ScrollText(QWidget *parent) :
     staticText.setTextFormat(Qt::PlainText);
 
 
-    setFixedHeight(fontMetrics().height());
+    setFixedHeight(fontMetrics().height()*1.3);
     leftMargin = height() / 3;
 
     setSeparator("   ---   ");
