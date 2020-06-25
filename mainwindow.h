@@ -21,6 +21,8 @@ public slots:
     void myfunction();
     void myfunction2();
     void parse();
+    void status();
+
 
 
 

@@ -18,12 +18,12 @@
 
 
 using namespace std;
-std::string ip_address,label,volume_str,str1,songa;
-std::string url1 ="http://", url_state= "/api/v1/getState";
-QString qIP_address, qstatus,text;
+std::string ip_address,label,volume_str,str1,songa,status_response;
+std::string url1 ="http://", url_state= "/api/v1/getState", url_ping= "/api/v1/ping";
+QString qIP_address, qstatus,text,str_re;
 double volumed;
 
-std::string title_str, artist_str, is_playing;
+std::string title_str, artist_str, is_playing,odpoved;
 
 
 struct passwd *pw = getpwuid(getuid());
@@ -101,14 +101,24 @@ MainWindow::MainWindow(QWidget *parent)
     timer2 = new QTimer(this);
     parse();
     myfunction();
+    status();
     connect(timer2,SIGNAL(timeout()),this,SLOT(parse()));
     timer2 ->start(500);
     connect(timer,SIGNAL(timeout()),this,SLOT(myfunction()));
-    timer ->start(50);
     connect(timer,SIGNAL(timeout()),this,SLOT(myfunction2()));
+    connect(timer2,SIGNAL(timeout()),this,SLOT(status()));
     timer ->start(50);
     ui->song->setText(title_str.c_str());
     ui->artist->setText(artist_str.c_str());
+    if(status_response !="pong")
+    {
+        ui->on_off->setText("OFF");
+    }
+    else
+    {
+     ui->on_off->setText("ON");
+    }
+
 }
 
 
@@ -126,15 +136,49 @@ void MainWindow::myfunction()
     songa = text.toStdString();
     ui->volume->setText(str1.c_str());
     if (is_playing == "play")
+        {
+          ui->playing->setText("Playing...");
+        }
+        else
+        {
+         ui->playing->setText("");
+        }
+    if(status_response !="pong")
     {
-      ui->playing->setText("Playing...");
+        ui->on_off->setText("OFF");
     }
     else
     {
-     ui->playing->setText("");
+     ui->on_off->setText("ON");
     }
+
 }
 
+void MainWindow::status(){
+
+    QNetworkAccessManager *manager;
+    manager = new QNetworkAccessManager(this);
+    std::string label = qIP_address.toStdString();
+    std::string url3 = url1 + label + url_ping;
+
+    QNetworkReply *reply1 = manager->get(QNetworkRequest(QUrl(url3.c_str())));
+    QEventLoop eventloop;
+        connect(reply1,SIGNAL(finished()),&eventloop,SLOT(quit()));
+
+        eventloop.exec();
+        QByteArray bts1 = reply1->readAll();
+        status_response = bts1.toStdString();
+        //qDebug()<<(status_response.c_str());
+        if(status_response !="pong")
+        {
+            ui->on_off->setText("OFF");
+        }
+        else
+        {
+         ui->on_off->setText("ON");
+        }
+        delete manager;
+}
 
 void MainWindow::parse()
 {
@@ -144,13 +188,16 @@ void MainWindow::parse()
             std::string url2 = url1 + label + url_state;
             QNetworkReply *reply = manager->get(QNetworkRequest(QUrl(url2.c_str())));
 
+
             QEventLoop eventloop;
                 connect(reply,SIGNAL(finished()),&eventloop,SLOT(quit()));
                 eventloop.exec();
-            QByteArray bts = reply->readAll();
-            QString str(bts);
 
-            QJsonDocument jsonResponse = QJsonDocument::fromJson(str.toUtf8());
+            QByteArray bts = reply->readAll();
+            QString str_re(bts);
+
+
+            QJsonDocument jsonResponse = QJsonDocument::fromJson(str_re.toUtf8());
             QJsonObject jsonObject = jsonResponse.object();
             QString qstatus = jsonObject["title"].toString();
             title_str = qstatus.toStdString();
@@ -163,7 +210,9 @@ void MainWindow::parse()
             str1 = std::to_string(qvolume);
             volume_str = qvolume;
             delete manager;
+
 }
+
 
 void MainWindow::myfunction2()
 {
@@ -177,6 +226,8 @@ void MainWindow::myfunction2()
     }
 
 }
+
+
 
 
 void MainWindow::on_pushButton_prev_clicked()
@@ -291,7 +342,12 @@ void MainWindow::on_actionIP_adress_triggered()
         QTextStream stream(&file);
         stream << ip_address.c_str();
         file.close();
-        readip();}
+        readip();
+        status();
+        myfunction();
+
+      }
+
 }
 
 void MainWindow::on_actionExit_triggered()
