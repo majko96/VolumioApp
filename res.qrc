@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/res">
         <file>images/logo.png</file>
+        <file>images/toggle.png</file>
+        <file>images/next.png</file>
+        <file>images/prev.png</file>
+        <file>images/pause.png</file>
+        <file>images/play.png</file>
+        <file>images/pause_F.png</file>
     </qresource>
 </RCC>

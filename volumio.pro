@@ -21,14 +21,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    scrolltext.cpp
+    scrolltext.cpp \
+    settingsui.cpp
 
 HEADERS += \
     mainwindow.h \
-    scrolltext.h
+    scrolltext.h \
+    settingsui.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    settingsui.ui
 
 
 # Default rules for deployment.
@@ -44,4 +47,7 @@ RESOURCES += \
 
 
 INCLUDEPATH += /home/mario/Documents/QtDark
+
+DISTFILES += \
+    ../Desktop/new_volumio/images/play.png
 

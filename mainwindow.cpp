@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "settingsui.h"
 #include <QtNetwork/QNetworkAccessManager>
 #include <QDir>
 #include <QInputDialog>
@@ -12,6 +13,7 @@
 #include <unistd.h>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QSystemTrayIcon>
 
 
 
@@ -19,9 +21,10 @@
 
 using namespace std;
 std::string ip_address,label,volume_str,str1,songa,status_response;
-std::string url1 ="http://", url_state= "/api/v1/getState", url_ping= "/api/v1/ping";
+std::string url1 ="http://", url_state= "/api/v1/getState", url_ping= "/api/v1/ping", url_volume = "/api/v1/commands/?cmd=volume&volume=";
 QString qIP_address, qstatus,text,str_re;
 double volumed;
+int val,qvolume;
 
 std::string title_str, artist_str, is_playing,odpoved;
 
@@ -65,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+    readSettings();
     readip();
     ui->setupUi(this);
     this->setWindowTitle("VolumioX");
@@ -97,16 +101,37 @@ MainWindow::MainWindow(QWidget *parent)
         qApp->setPalette(darkPalette);
 
 
+        trayIcon=new QSystemTrayIcon;
+            trayIcon->setIcon(QIcon(":/res/images/logo.png"));
+            trayContextMenu=new QMenu;
+            actShow=trayContextMenu->addAction(tr("Show"));
+            actHide=trayContextMenu->addAction(tr("Hide"));
+            actExit=trayContextMenu->addAction(tr("Exit"));
+            trayIcon->setContextMenu(trayContextMenu);
+            trayIcon->show();
+            connect(actShow,&QAction::triggered,
+                    this,&MainWindow::actShow_Triggered);
+            connect(actHide,&QAction::triggered,
+                    this,&MainWindow::actHide_Triggered);
+            connect(actExit,&QAction::triggered,
+                    this,&MainWindow::actExit_Triggered);
+            connect(trayIcon,&QSystemTrayIcon::activated,
+                    this,&MainWindow::trayIcon_activated);
+
+
     timer = new QTimer(this);
     timer2 = new QTimer(this);
     parse();
     myfunction();
     status();
     connect(timer2,SIGNAL(timeout()),this,SLOT(parse()));
-    timer2 ->start(500);
     connect(timer,SIGNAL(timeout()),this,SLOT(myfunction()));
     connect(timer,SIGNAL(timeout()),this,SLOT(myfunction2()));
     connect(timer2,SIGNAL(timeout()),this,SLOT(status()));
+    timer2 ->start(500);
+    ui->horizontalSlider->setValue(qvolume);
+
+
     timer ->start(50);
     ui->song->setText(title_str.c_str());
     ui->artist->setText(artist_str.c_str());
@@ -129,33 +154,113 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::myfunction()
+
+void MainWindow::changeEvent(QEvent *event)
 {
 
+    if(event->type()==QEvent::WindowStateChange){
+        if(isMinimized()){
+            writeSettings();
+            this->hide();
+            trayIcon->show();
+
+        }
+    }
+    else{
+        QMainWindow::changeEvent(event);
+
+    }
+}
+
+
+
+void MainWindow::trayIcon_activated(QSystemTrayIcon::ActivationReason reason)
+{
+    if(reason==3){ //reason==Trigger
+        readSettings();
+        this->show();
+
+    }
+}
+
+void MainWindow::actShow_Triggered()
+{
+    readSettings();
+    this->show();
+
+}
+
+void MainWindow::actHide_Triggered()
+{
+    writeSettings();
+    this->hide();
+
+}
+
+void MainWindow::actExit_Triggered()
+{
+    QCoreApplication::exit();
+}
+
+
+
+void MainWindow::writeSettings()
+{
+    QSettings settings("Software Inc.", "Icon Test");
+
+    settings.beginGroup("mainWindow");
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("state", saveState());
+    settings.endGroup();
+}
+
+void MainWindow::readSettings()
+{
+    QSettings settings("Software Inc.", "Icon Test");
+
+    settings.beginGroup("mainWindow");
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("state").toByteArray());
+    settings.endGroup();
+}
+
+
+
+void MainWindow::myfunction()
+{
     QString text = ui->song->text();
     songa = text.toStdString();
     ui->volume->setText(str1.c_str());
     if (is_playing == "play")
         {
-          ui->playing->setText("Playing...");
+          //ui->playing->setText("Playing...");
+          QIcon ico;
+          ico.addPixmap(QPixmap(":/res/images/pause_F.png"));
+          ui->pushButton_play->setIcon(ico);
+          ui->pushButton_play->setIconSize(QSize(23, 23));
         }
         else
         {
-         ui->playing->setText("");
+         //ui->playing->setText("");
+         QIcon ico;
+         ico.addPixmap(QPixmap(":/res/images/play.png"));
+         ui->pushButton_play->setIcon(ico);
+         ui->pushButton_play->setIconSize(QSize(23, 23));
         }
-    if(status_response !="pong")
+    /*if(status_response !="pong")
     {
         ui->on_off->setText("OFF");
     }
     else
     {
      ui->on_off->setText("ON");
-    }
+    }*/
 
 }
 
 void MainWindow::status(){
 
+    writeSettings();
     QNetworkAccessManager *manager;
     manager = new QNetworkAccessManager(this);
     std::string label = qIP_address.toStdString();
@@ -206,10 +311,11 @@ void MainWindow::parse()
             artist_str = qartist.toStdString();
             QString qisplayng = jsonObject["status"].toString();
             is_playing = qisplayng.toStdString();
-            int qvolume = jsonObject["volume"].toInt();
+            qvolume = jsonObject["volume"].toInt();
             str1 = std::to_string(qvolume);
             volume_str = qvolume;
             delete manager;
+            ui->horizontalSlider->setValue(qvolume);
 
 }
 
@@ -226,8 +332,6 @@ void MainWindow::myfunction2()
     }
 
 }
-
-
 
 
 void MainWindow::on_pushButton_prev_clicked()
@@ -277,81 +381,13 @@ void MainWindow::on_pushButton_next_clicked()
 
 }
 
-void MainWindow::on_pushButton_minus_clicked()
-{
-    QNetworkAccessManager *manager;
-    manager = new QNetworkAccessManager(this);
 
-        connect(manager, SIGNAL(finished(QNetworkReply*)),
-                this, SLOT(replyFinished(QNetworkReply*)));
 
-        std::string label = qIP_address.toStdString();
-        std::string url = url1 + label + "/api/v1/commands/?cmd=volume&volume=minus";
 
-        manager->get(QNetworkRequest(QUrl(url.c_str())));
-}
-
-void MainWindow::on_pushButton_plus_clicked()
-{
-
-    QNetworkAccessManager *manager;
-    manager = new QNetworkAccessManager(this);
-
-        connect(manager, SIGNAL(finished(QNetworkReply*)),
-                this, SLOT(replyFinished(QNetworkReply*)));
-
-        std::string label = qIP_address.toStdString();
-        std::string url = url1 + label + "/api/v1/commands/?cmd=volume&volume=plus";
-        manager->get(QNetworkRequest(QUrl(url.c_str())));
-}
-
-void MainWindow::on_pushButton_clicked()
-{
-    QNetworkAccessManager *manager;
-    manager = new QNetworkAccessManager(this);
-
-        connect(manager, SIGNAL(finished(QNetworkReply*)),
-                this, SLOT(replyFinished(QNetworkReply*)));
-
-        std::string label = qIP_address.toStdString();
-        std::string url = url1 + label + "/api/v1/commands/?cmd=volume&volume=mute";
-
-        manager->get(QNetworkRequest(QUrl(url.c_str())));
-}
-
-void MainWindow::on_actionIP_adress_triggered()
-{
-    std::string label = qIP_address.toStdString();
-    bool ok;
-    QString text = QInputDialog::getText(this, tr("IP"),
-                                             tr("IP address of Volumio:"), QLineEdit::Normal,
-                                             tr(label.c_str()), &ok);
-
-      if (ok && !text.isEmpty()) {
-        QString input = text;
-        std::string input1=input.toStdString();
-        ip_address = input1;
-
-        QDir dir(path.c_str());
-        if (!dir.exists())
-             dir.mkpath(".");
-
-        QString filename = data1.c_str();
-        QFile file(filename);
-        file.open(QFile::WriteOnly|QFile::Truncate);
-        QTextStream stream(&file);
-        stream << ip_address.c_str();
-        file.close();
-        readip();
-        status();
-        myfunction();
-
-      }
-
-}
 
 void MainWindow::on_actionExit_triggered()
 {
+   writeSettings();
    QCoreApplication::exit();
 }
 
@@ -362,11 +398,36 @@ void MainWindow::on_actionAbout_2_triggered()
     msgBox.setText("Created by majko96\nmr.babinec@gmail.com");
     msgBox.exec();
 }
-
+ /*
 void MainWindow::on_actionGitHub_triggered()
 {
     QMessageBox msgBox1;
     msgBox1.setWindowTitle("GitHub");
     msgBox1.setText("<a href='https://github.com/majko96/VolumioApp'>Github</a>");
     msgBox1.exec();
+}
+*/
+void MainWindow::on_horizontalSlider_valueChanged(int)
+{
+    val = ui->horizontalSlider->value();
+    qDebug()<<val;
+    std::string s = std::to_string(val);
+
+
+    QNetworkAccessManager *manager;
+    manager = new QNetworkAccessManager(this);
+
+        connect(manager, SIGNAL(finished(QNetworkReply*)),
+                this, SLOT(replyFinished(QNetworkReply*)));
+
+        std::string label = qIP_address.toStdString();
+        std::string url = url1 + label + url_volume + s;
+        manager->get(QNetworkRequest(QUrl(url.c_str())));
+}
+
+void MainWindow::on_Settings_triggered()
+{
+    settingsUI sett_ui;
+    sett_ui.setModal(true);
+    sett_ui.exec();
 }
